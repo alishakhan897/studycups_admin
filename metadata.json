@@ -1,0 +1,5 @@
+{
+  "name": "College Admin Panel",
+  "description": "A comprehensive admin panel to manage college, course, exam, blog, and enquiry data. Features a dashboard with analytics and full CRUD functionality for all entities.",
+  "requestFramePermissions": []
+}
