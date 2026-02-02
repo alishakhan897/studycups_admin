@@ -49,7 +49,7 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
       return;
     }
 if (title === "Courses") {
-  const res = await fetch("http://localhost:5000/api/courses/all");
+  const res = await fetch("https://studycupsbackend-wb8p.onrender.com/api/courses/all");
   const json = await res.json();
 
   setData(json.data || []);
