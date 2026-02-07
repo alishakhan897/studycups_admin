@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import BlogEditor from "./BlogEditor";
 
 const AddBlog = ({ onBack }) => {
@@ -10,7 +11,19 @@ const AddBlog = ({ onBack }) => {
     imageUrl: "",
     excerpt: "",
     content: null, // JSON from EditorJS
-  });
+  }); 
+
+  useEffect(() => {
+  const savedDraft = localStorage.getItem("blog_draft_content");
+
+  if (savedDraft) {
+    setFormData(prev => ({
+      ...prev,
+      content: JSON.parse(savedDraft),
+    }));
+  }
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,6 +48,7 @@ const AddBlog = ({ onBack }) => {
       if (!res.ok) throw new Error("Failed");
 
       alert("✅ Blog published successfully");
+      localStorage.removeItem("blog_draft_content");
       if (onBack) onBack();
     } catch (err) {
       console.error(err);
