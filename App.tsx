@@ -100,7 +100,8 @@ const App: React.FC = () => {
        onAddBlog={() => setCurrentPage("addBlog")}
       />;
     case "addBlog":
-      return <AddBlog />;
+  return <AddBlog onBack={() => setCurrentPage("blogs")} />;
+
 
     case 'enquiries':
       return <DataManagement title="Enquiries" api={enquiryApi} columns={enquiryColumns} formFields={enquiryFormFields} />;
