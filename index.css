@@ -1,0 +1,22 @@
+/* ===== EditorJS Content Width ===== */
+.codex-editor__redactor {
+  max-width: 720px;
+  margin-left: 0;
+  padding-bottom: 80px;
+}
+
+.ce-block__content {
+  max-width: 720px;
+}
+
+/* ===== Toolbar visibility ===== */
+.ce-toolbar__plus,
+.ce-toolbar__settings-btn {
+  color: #2563eb;
+}
+
+/* ===== Better text look ===== */
+.ce-paragraph {
+  font-size: 16px;
+  line-height: 1.7;
+}

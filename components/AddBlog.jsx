@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BlogEditor from "./BlogEditor";
 
 const AddBlog = ({ onBack }) => {
   const [formData, setFormData] = useState({
@@ -8,180 +9,127 @@ const AddBlog = ({ onBack }) => {
     category: "",
     imageUrl: "",
     excerpt: "",
-    content: "",
+    content: null, // JSON from EditorJS
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log("FORM DATA:", formData);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
+    if (!formData.content) {
+      alert("Blog content is empty");
+      return;
+    }
 
-  try {
-    const res = await fetch("https://studycupsbackend-wb8p.onrender.com/api/blogs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/blogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed");
+      if (!res.ok) throw new Error("Failed");
 
-    alert("✅ Blog published successfully");
-
-    if (onBack) onBack();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Failed to publish blog");
-  }
-};
-
+      alert("✅ Blog published successfully");
+      if (onBack) onBack();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to publish blog");
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Add New Blog
-        </h1>
-
+        <h1 className="text-2xl font-semibold">Add New Blog</h1>
         {onBack && (
-          <button
-            onClick={onBack}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            ← Back to Blogs
+          <button onClick={onBack} className="text-blue-600">
+            ← Back
           </button>
         )}
       </div>
 
-      {/* FORM CARD */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl shadow-md p-6 space-y-6"
+        className="bg-white p-6 rounded-xl shadow space-y-6"
       >
-        {/* ROW 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Blog Title
-            </label>
-            <input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Enter blog title"
-              required
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <input
+          name="title"
+          placeholder="Blog Title"
+          value={formData.title}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          required
+        />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Author Name
-            </label>
-            <input
-              name="author"
-              value={formData.author}
-              onChange={handleChange}
-              placeholder="e.g. StudyCups Editorial Team"
-              className="w-full border rounded-lg px-3 py-2"
-            />
-          </div>
-        </div>
+        <input
+          name="author"
+          placeholder="Author"
+          value={formData.author}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
 
-        {/* ROW 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Publish Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="w-full border rounded-lg px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <input
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              placeholder="Engineering / Exams / Guidance"
-              className="w-full border rounded-lg px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Featured Image URL
-            </label>
-            <input
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="w-full border rounded-lg px-3 py-2"
-            />
-          </div>
-        </div>
-
-        {/* EXCERPT */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Short Excerpt
-          </label>
-          <textarea
-            name="excerpt"
-            value={formData.excerpt}
+        <div className="grid grid-cols-3 gap-4">
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
             onChange={handleChange}
-            rows={3}
-            placeholder="Short summary shown on blog listing..."
-            className="w-full border rounded-lg px-3 py-2"
+            className="border p-2 rounded"
+          />
+          <input
+            name="category"
+            placeholder="Category"
+            value={formData.category}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          />
+          <input
+            name="imageUrl"
+            placeholder="Featured Image URL"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            className="border p-2 rounded"
           />
         </div>
 
-        {/* CONTENT */}
+        <textarea
+          name="excerpt"
+          placeholder="Short excerpt"
+          value={formData.excerpt}
+          onChange={handleChange}
+          rows={3}
+          className="w-full border p-2 rounded"
+        />
+
+        {/* BLOG CONTENT */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Blog Content
-          </label>
-          <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            rows={10}
-            placeholder="Write full blog content here..."
-            className="w-full border rounded-lg px-3 py-2"
+          <label className="font-medium mb-2 block">Blog Content</label>
+          <BlogEditor
+            onChange={(data) =>
+              setFormData((prev) => ({ ...prev, content: data }))
+            }
           />
         </div>
 
-        {/* ACTIONS */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              className="bg-gray-200 px-4 py-2 rounded"
             >
               Cancel
             </button>
           )}
-
           <button
             type="submit"
-            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded"
           >
             Publish Blog
           </button>
