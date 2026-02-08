@@ -132,7 +132,7 @@ export interface User {
 
 export type DataItem = College | Course | Exam | Blog | Enquiry | User | Event;
 
-export type Page = 'dashboard' | 'colleges' | 'courses' | 'exams' | 'blogs' | 'enquiries' | 'events' | 'settings' |"editCollege" | "editExam" | "addBlog"; 
+export type Page = 'dashboard' | 'colleges' | 'courses' | 'exams' | 'blogs' | 'enquiries' | 'events' | 'settings' |"editCollege" | "editExam" | "addBlog" | "editBlog"  ; 
 
 export interface Column<T> {
   header: string;

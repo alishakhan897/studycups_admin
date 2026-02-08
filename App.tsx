@@ -14,6 +14,8 @@ import { collegeColumns, courseColumns, examColumns, blogColumns, enquiryColumns
 import type { Page } from './types';
 import ExamEditPage from "./components/ExamEditPage";
 import AddBlog from "./components/AddBlog";
+import ExistingBlogEditor from "./components/ExistingBlogEditor";
+
 
 
 const App: React.FC = () => {
@@ -94,22 +96,36 @@ const App: React.FC = () => {
           />
         );
 
-   case "blogs":
-  return (
+  case "blogs":
+  return editingBlogId === null ? (
     <DataManagement
       title="Blogs"
       api={blogApi}
       columns={blogColumns}
       formFields={blogFormFields}
       onAddBlog={() => setCurrentPage("addBlog")}
+      onEditBlog={(id) => {
+        setEditingBlogId(id);      // ✅ ID set
+        setCurrentPage("editBlog");
+      }}
     />
-  );
+  ) : null;
 
 case "addBlog":
   return (
     <AddBlog onBack={() => setCurrentPage("blogs")} />
   );
 
+case "editBlog":
+  return (
+    <ExistingBlogEditor
+      blogId={editingBlogId!}
+      onBack={() => {
+        setEditingBlogId(null);
+        setCurrentPage("blogs");
+      }}
+    />
+  );
 
       
       case 'enquiries':
@@ -139,6 +155,7 @@ case "addBlog":
     editCollege: 'College Scraper Dashboard',
     editExam: 'Edit Exam',
     addBlog: 'Add New Blog',
+    editBlog: 'Edit Blog',
   }
 
   return (

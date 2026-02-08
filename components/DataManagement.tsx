@@ -352,7 +352,7 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
                           onEditExam(item.id);
                         } 
                           else if (title === "Blogs" && onEditBlog) {
-      onEditBlog(item._id);   // ✅ ONLY ID
+      onEditBlog(item.id);   // ✅ ONLY ID
     } 
 
                         else {

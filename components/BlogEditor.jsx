@@ -6,24 +6,30 @@ import Paragraph from "@editorjs/paragraph";
 import ImageTool from "@editorjs/image";
 import Marker from "@editorjs/marker";
 
-
-const BlogEditor = ({ onChange }) => {
+const BlogEditor = ({ onChange, mode = "add", initialData = null }) => {
   const holderRef = useRef(null);
-  const isInitialized = useRef(false); // React StrictMode fix
+  const isInitialized = useRef(false);
 
   useEffect(() => {
     if (!holderRef.current) return;
     if (isInitialized.current) return;
     isInitialized.current = true;
 
-    // ✅ Draft restore (safe)
-    let savedDraft = null;
-    try {
-      const raw = localStorage.getItem("blog_draft");
-      if (raw) savedDraft = JSON.parse(raw);
-    } catch (e) {
-      console.warn("Invalid draft, clearing");
-      localStorage.removeItem("blog_draft");
+    let editorData = { blocks: [] };
+
+    // EDIT MODE → backend data
+    if (mode === "edit" && initialData?.blocks) {
+      editorData = initialData;
+    }
+
+    // ADD MODE → draft restore
+    if (mode === "add") {
+      try {
+        const raw = localStorage.getItem("blog_draft");
+        if (raw) editorData = JSON.parse(raw);
+      } catch {
+        localStorage.removeItem("blog_draft");
+      }
     }
 
     const editor = new EditorJS({
@@ -31,18 +37,13 @@ const BlogEditor = ({ onChange }) => {
       autofocus: true,
       minHeight: 250,
       placeholder: "Start writing your blog here...",
-
-      // ✅ Restore content if exists
-      data: savedDraft || { blocks: [] },
+      data: editorData,
 
       tools: {
         header: {
           class: Header,
           inlineToolbar: true,
-          config: {
-            levels: [2, 3, 4],
-            defaultLevel: 2,
-          },
+          config: { levels: [2, 3, 4], defaultLevel: 2 },
         },
 
         paragraph: {
@@ -54,75 +55,77 @@ const BlogEditor = ({ onChange }) => {
           class: List,
           inlineToolbar: true,
         },
+
         marker: {
-    class: Marker,
-    shortcut: "CMD+SHIFT+M",
-  },
+          class: Marker,
+          shortcut: "CMD+SHIFT+M",
+        },
 
         image: {
           class: ImageTool,
           config: {
-            captionPlaceholder: "Caption",
-
-            // 🔗 EXTRA ACTION: Paste image URL manually
+            captionPlaceholder: "Caption", 
             actions: [
-              {
-                name: "paste-url",
-                title: "Paste image URL",
-                icon: "<svg width='14' height='14'><path d='M3 7h8'/></svg>",
-                action: async (_, api) => {
-                  const url = prompt("Paste image URL");
-                  if (!url) return;
-
-                  api.blocks.insert("image", {
-                    file: { url },
-                    caption: "",
-                  });
-                },
-              },
-            ],
-
+      {
+        name: "align-left",
+        title: "Align Left",
+        action: (_, api) => {
+          api.blocks.update(api.blocks.getCurrentBlockIndex(), {
+            align: "left",
+          });
+        },
+      },
+      {
+        name: "align-center",
+        title: "Align Center",
+        action: (_, api) => {
+          api.blocks.update(api.blocks.getCurrentBlockIndex(), {
+            align: "center",
+          });
+        },
+      },
+      {
+        name: "align-right",
+        title: "Align Right",
+        action: (_, api) => {
+          api.blocks.update(api.blocks.getCurrentBlockIndex(), {
+            align: "right",
+          });
+        },
+      },
+    ],
             uploader: {
-              // 📁 OPTION 1: Upload from system → Cloudinary
               uploadByFile: async (file) => {
                 const formData = new FormData();
                 formData.append("image", file);
 
                 const res = await fetch(
                   "https://studycupsbackend-wb8p.onrender.com/api/blogs/upload-image",
-                  {
-                    method: "POST",
-                    body: formData,
-                  }
+                  { method: "POST", body: formData }
                 );
 
                 return await res.json();
-                // expected:
-                // { success: 1, file: { url } }
               },
-
-              // 🔗 OPTION 2: Direct image URL (NO upload)
-              uploadByUrl: async (url) => {
-                return {
-                  success: 1,
-                  file: { url },
-                };
-              },
+              uploadByUrl: async (url) => ({
+                success: 1,
+                file: { url },
+              }),
             },
           },
         },
       },
 
-      // 🔐 AUTO SAVE DRAFT
       onChange: async () => {
         const data = await editor.save();
-        localStorage.setItem("blog_draft", JSON.stringify(data));
+        if (mode === "add") {
+          localStorage.setItem("blog_draft", JSON.stringify(data));
+        }
         onChange(data);
       },
     });
 
-    // ❌ destroy intentionally NOT used (EditorJS + React 18 safe)
-  }, []);
+    // ❌ NO destroy (EditorJS + React 18 safe)
+  }, [mode, initialData]);
 
   return (
     <div className="border rounded-lg p-4 bg-white min-h-[300px]">

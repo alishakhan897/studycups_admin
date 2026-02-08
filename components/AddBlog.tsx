@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import BlogEditor from "./BlogEditor";
+import { editorToHtml } from "./editorToHtml";
 
 const AddBlog = ({ onBack }) => {
   const [formData, setFormData] = useState({
@@ -124,11 +125,13 @@ const AddBlog = ({ onBack }) => {
         {/* BLOG CONTENT */}
         <div>
           <label className="font-medium mb-2 block">Blog Content</label>
-        <BlogEditor
+       <BlogEditor
+  mode="add"
   onChange={(data) =>
-    setFormData((prev) => ({ ...prev, content: data }))
+    setFormData(prev => ({ ...prev, content: data }))
   }
 />
+
         </div>
 
         <div className="flex justify-end gap-3">
