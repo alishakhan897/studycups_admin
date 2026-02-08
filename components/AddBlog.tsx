@@ -15,6 +15,10 @@ const AddBlog = ({ onBack }) => {
 
   // ✅ Restore draft (NEW BLOG ONLY)
   useEffect(() => {
+    localStorage.removeItem("blog_draft");
+    localStorage.removeItem("blog_draft_content");
+  }, []);
+  useEffect(() => {
     const saved = localStorage.getItem("blog_draft_content");
     if (saved) {
       setFormData((p) => ({
@@ -48,9 +52,10 @@ const AddBlog = ({ onBack }) => {
       );
       
       if (!res.ok) throw new Error("Failed");
-       localStorage.removeItem("blog_draft");
+     
 
       alert("✅ Blog published successfully");
+        localStorage.removeItem("blog_draft");
       localStorage.removeItem("blog_draft_content");
       onBack();
     } catch (err) {
