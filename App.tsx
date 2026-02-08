@@ -94,51 +94,24 @@ const App: React.FC = () => {
           />
         );
 
-      case 'blogs':
-        return (
-          <DataManagement
-            title="Blogs"
-            api={blogApi}
-            columns={blogColumns}
-            formFields={blogFormFields}
-            onAddBlog={() => {
-              setEditingBlogId(null);
-              setCurrentPage("addBlog");
-            }}
-            onEditBlog={(id) => {
-              setEditingBlogId(id);
-              setCurrentPage("addBlog");
-            }}
-          />
-        );
-
-        return <DataManagement title="Blogs" api={blogApi}
-          columns={blogColumns}
-          formFields={blogFormFields}
-          onAddBlog={() => setCurrentPage("addBlog")}
-        />;
-   case "addBlog":
+   case "blogs":
   return (
-    <AddBlog
-      blogId={editingBlogId}
-      onBack={() => {
-        setEditingBlogId(null);
-        setCurrentPage("blogs");
-      }}
+    <DataManagement
+      title="Blogs"
+      api={blogApi}
+      columns={blogColumns}
+      formFields={blogFormFields}
+      onAddBlog={() => setCurrentPage("addBlog")}
     />
   );
 
-        case "editBlog":
-        return (
-          <AddBlog
-            blogId={editingBlogId}
-            onBack={() => {
-              setEditingBlogId(null);
-              setCurrentPage("blogs");
-            }}
-          />
-        );
+case "addBlog":
+  return (
+    <AddBlog onBack={() => setCurrentPage("blogs")} />
+  );
 
+
+      
       case 'enquiries':
         return <DataManagement title="Enquiries" api={enquiryApi} columns={enquiryColumns} formFields={enquiryFormFields} />;
 
