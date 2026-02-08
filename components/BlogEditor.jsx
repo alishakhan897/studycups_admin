@@ -5,92 +5,93 @@ import List from "@editorjs/list";
 import Paragraph from "@editorjs/paragraph";
 import ImageTool from "@editorjs/image";
 
-const BlogEditor = ({ onChange }) => {
-    const editorRef = useRef(null);
-    const holderRef = useRef(null);
-    const initializedRef = useRef(false); // StrictMode fix
+const BlogEditor = ({ onChange, content }) => {
+  const editorRef = useRef(null);
+  const holderRef = useRef(null);
 
-    useEffect(() => {
-        if (initializedRef.current) return;
-        if (!holderRef.current) return;
+  useEffect(() => {
+    if (!holderRef.current) return;
 
-        initializedRef.current = true;
-        const savedDraft = localStorage.getItem("blog_draft_content");
-        const editor = new EditorJS({
-            holder: holderRef.current,
-            autofocus: true,
-            placeholder: "Start writing your blog here...",
-            minHeight: 200,
+    // 🔥 destroy old editor
+    if (editorRef.current) {
+      editorRef.current.destroy();
+      editorRef.current = null;
+    }
 
-            tools: {
-                header: {
-                    class: Header,
-                    inlineToolbar: true,
-                    config: {
-                        levels: [2, 3, 4],
-                        defaultLevel: 2,
-                    },
-                },
-                paragraph: {
-                    class: Paragraph,
-                    inlineToolbar: true,
-                },
-                list: {
-                    class: List,
-                    inlineToolbar: true,
-                },
-                image: {
-                    class: ImageTool,
-                    config: {
-                        uploader: {
-                            uploadByFile: async (file) => {
-                                return new Promise((resolve) => {
-                                    const reader = new FileReader();
-                                    reader.onload = () => {
-                                        resolve({
-                                            success: 1,
-                                            file: {
-                                                url: reader.result, // ✅ base64
-                                            },
-                                        });
-                                    };
-                                    reader.readAsDataURL(file);
-                                });
-                            },
-                        },
-                    },
-                },
+    const editor = new EditorJS({
+      holder: holderRef.current,
+      autofocus: true,
+      placeholder: "Start writing your blog here...",
+      minHeight: 200,
 
+      // ✅ PREFILL CONTENT
+      data: content ?? { blocks: [] },
+
+      tools: {
+        header: {
+          class: Header,
+          inlineToolbar: true,
+          config: {
+            levels: [2, 3, 4],
+            defaultLevel: 2,
+          },
+        },
+        paragraph: {
+          class: Paragraph,
+          inlineToolbar: true,
+        },
+        list: {
+          class: List,
+          inlineToolbar: true,
+        },
+        image: {
+          class: ImageTool,
+          config: {
+            uploader: {
+              uploadByFile: async (file) => {
+                const formData = new FormData();
+                formData.append("image", file);
+
+                const res = await fetch(
+                  "https://studycupsbackend-wb8p.onrender.com/api/blogs/upload-image",
+                  {
+                    method: "POST",
+                    body: formData,
+                  }
+                );
+
+                return await res.json();
+              },
             },
+          },
+        },
+      },
 
-            onChange: async () => {
-                const data = await editor.save();
+      onChange: async () => {
+        const data = await editor.save();
+        onChange(data);
+        localStorage.setItem(
+          "blog_draft_content",
+          JSON.stringify(data)
+        );
+      },
+    });
 
-                // Parent ko bhejo
-                onChange(data);
+    editorRef.current = editor;
 
-                // 🔐 AUTO BACKUP
-                localStorage.setItem("blog_draft_content", JSON.stringify(data));
-            },
+    return () => {
+      editor.destroy();
+    };
+  }, [content]); // 🔥 MOST IMPORTANT
 
-        });
-
-        editorRef.current = editor;
-
-        // ❌ destroy mat karo (DEV StrictMode fix)
-        return () => { };
-    }, []);
-
-    return (
-        <div className="border rounded-lg p-4 bg-white min-h-[260px]">
-            {/* Helper text */}
-            <p className="text-sm text-gray-500 mb-2">
-                Press <b>Enter</b> to write • Press <b>/</b> for heading, list, image
-            </p>
-
-            <div ref={holderRef} />
-        </div>
-    );
+  return (
+    <div className="border rounded-lg p-4 bg-white min-h-[260px]">
+      <p className="text-sm text-gray-500 mb-2">
+        Press <b>Enter</b> to write • Press <b>/</b> for heading, list, image
+      </p>
+      <div ref={holderRef} />
+    </div>
+  );
 };
 
 export default BlogEditor;
