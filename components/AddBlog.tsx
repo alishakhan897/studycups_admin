@@ -18,15 +18,7 @@ const AddBlog = ({ onBack }) => {
     localStorage.removeItem("blog_draft");
     localStorage.removeItem("blog_draft_content");
   }, []);
-  useEffect(() => {
-    const saved = localStorage.getItem("blog_draft_content");
-    if (saved) {
-      setFormData((p) => ({
-        ...p,
-        content: JSON.parse(saved),
-      }));
-    }
-  }, []);
+ 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
