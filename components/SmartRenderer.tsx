@@ -401,7 +401,25 @@ const HeroImageEditor = ({ images, onChange }: { images: any[]; onChange: (v: an
 };
 
 // --- MAIN SMART RENDERER ---
-const SmartRenderer: React.FC<{ value: any; onChange: (v: any) => void; depth?: number }> = ({ value, onChange, depth = 0 }) => {
+interface SmartRendererProps {
+  value: any;
+  onChange: (v: any) => void;
+  depth?: number;
+  useFlatObjectTable?: boolean;
+  showCmsBlockControls?: boolean;
+  allowAddField?: boolean;
+  hiddenKeys?: string[];
+}
+
+const SmartRenderer: React.FC<SmartRendererProps> = ({
+  value,
+  onChange,
+  depth = 0,
+  useFlatObjectTable = true,
+  showCmsBlockControls = true,
+  allowAddField = true,
+  hiddenKeys = NO_BLOCK_FIELDS,
+}) => {
   const handleAddBlock = (key: string, type: "text" | "table" | "list") => {
   let newBlock;
 
@@ -439,13 +457,118 @@ const SmartRenderer: React.FC<{ value: any; onChange: (v: any) => void; depth?: 
   });
 };
 
+  const getDefaultFieldValue = (fieldType: string | null) => {
+    switch ((fieldType || "text").trim().toLowerCase()) {
+      case "object":
+        return {};
+      case "array":
+        return [];
+      case "number":
+        return 0;
+      case "boolean":
+        return false;
+      default:
+        return "";
+    }
+  };
+
+  const handleAddField = () => {
+    if (!allowAddField || typeof value !== "object" || value === null || Array.isArray(value)) {
+      return;
+    }
+
+    const fieldName = window.prompt("Enter new field name");
+
+    if (!fieldName) {
+      return;
+    }
+
+    const trimmedFieldName = fieldName.trim();
+
+    if (!trimmedFieldName) {
+      return;
+    }
+
+    if (trimmedFieldName in value) {
+      window.alert("Field already exists");
+      return;
+    }
+
+    const fieldType = window.prompt(
+      "Initial field type? text / object / array / number / boolean",
+      "text"
+    );
+
+    onChange({
+      ...value,
+      [trimmedFieldName]: getDefaultFieldValue(fieldType),
+    });
+  };
+
+  const getNewArrayItem = (items: any[]) => {
+    const firstDefinedItem = items.find(
+      item => item !== undefined && item !== null
+    );
+
+    if (firstDefinedItem === undefined) {
+      const itemType = window.prompt(
+        "Initial item type? text / object / array / number / boolean",
+        "text"
+      );
+
+      return getDefaultFieldValue(itemType);
+    }
+
+    if (Array.isArray(firstDefinedItem)) {
+      return [];
+    }
+
+    if (typeof firstDefinedItem === "object" && firstDefinedItem !== null) {
+      return {};
+    }
+
+    if (typeof firstDefinedItem === "number") {
+      return 0;
+    }
+
+    if (typeof firstDefinedItem === "boolean") {
+      return false;
+    }
+
+    return "";
+  };
+
 
   if (typeof value !== "object" || value === null) {
-    return <textarea className="w-full border border-slate-200 p-2 rounded-lg text-[12px] outline-none focus:border-blue-400 min-h-[60px]" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
+    if (typeof value === "boolean") {
+      return (
+        <select
+          className="w-full rounded-lg border border-slate-200 p-2 text-[12px] outline-none focus:border-blue-400"
+          value={String(value)}
+          onChange={(e) => onChange(e.target.value === "true")}
+        >
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      );
+    }
+
+    if (typeof value === "number") {
+      return (
+        <input
+          type="number"
+          className="w-full rounded-lg border border-slate-200 p-2 text-[12px] outline-none focus:border-blue-400"
+          value={Number.isFinite(value) ? value : ""}
+          onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+        />
+      );
+    }
+
+    return <textarea className="w-full border border-slate-200 p-2 rounded-lg text-[12px] outline-none focus:border-blue-400 min-h-[60px]" value={value === null || value === undefined ? "" : String(value)} onChange={(e) => onChange(e.target.value)} />;
   }
 
   if (Array.isArray(value)) {
-    if (isFlatObjectArray(value)) return <AutoDataTable data={value} onChange={onChange} />;
+    if (useFlatObjectTable && isFlatObjectArray(value)) return <AutoDataTable data={value} onChange={onChange} />;
     return (
       <div className="space-y-4">
         {value.map((v, i) => (
@@ -456,21 +579,29 @@ const SmartRenderer: React.FC<{ value: any; onChange: (v: any) => void; depth?: 
             ) : Array.isArray(v) ? (
                 <NestedListEditor items={v} onChange={(nv) => { const copy = [...value]; copy[i] = nv; onChange(copy); }} />
             ) : (
-                <SmartRenderer value={v} onChange={(nv) => { const copy = [...value]; copy[i] = nv; onChange(copy); }} depth={depth + 1} />
+                <SmartRenderer
+                  value={v}
+                  onChange={(nv) => { const copy = [...value]; copy[i] = nv; onChange(copy); }}
+                  depth={depth + 1}
+                  useFlatObjectTable={useFlatObjectTable}
+                  showCmsBlockControls={showCmsBlockControls}
+                  allowAddField={allowAddField}
+                  hiddenKeys={hiddenKeys}
+                />
             )}
           </div>
         ))}
-        <button onClick={() => onChange([...value, ""])} className="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 hover:border-blue-300 hover:text-blue-500 transition-all">+ ADD NEW ITEM</button>
+        <button onClick={() => onChange([...value, getNewArrayItem(value)])} className="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 hover:border-blue-300 hover:text-blue-500 transition-all">+ ADD NEW ITEM</button>
       </div>
     );
   }
 
   return (
     <div className={`space-y-3 ${depth > 0 ? "mt-2" : ""}`}>
-      {Object.entries(value).filter(([key]) => !NO_BLOCK_FIELDS.includes(key)).map(([key, val]) => {
+      {Object.entries(value).filter(([key]) => !hiddenKeys.includes(key)).map(([key, val]) => {
         const isImg = Array.isArray(val) && (key.toLowerCase().includes("image") || key === "heroImages");
         // Logic: Agar image hai ya field 'EXCLUDED_FIELDS' list mein hai, toh buttons nahi dikhane
-        const showControls = !isImg && !NO_BLOCK_FIELDS.includes(key) && !EXCLUDED_FIELDS.includes(key);
+        const showControls = !isImg && !hiddenKeys.includes(key) && !EXCLUDED_FIELDS.includes(key);
 
         return (
           <AccordionField key={key} title={formatKey(key)} variant={depth > 0 ? 'nested' : 'primary'}> 
@@ -487,18 +618,32 @@ const SmartRenderer: React.FC<{ value: any; onChange: (v: any) => void; depth?: 
         </button>
       </div>
             <div className="space-y-3">
-              {showControls && <ActionIcons onAdd={(type) => handleAddBlock(key, type)} />}
+              {showCmsBlockControls && showControls && <ActionIcons onAdd={(type) => handleAddBlock(key, type)} />}
               {isImg ? (
                 <HeroImageEditor images={val as any[]} onChange={(nv) => onChange({...value, [key]: nv})}/>
               ) : (
                 <SmartRenderer 
                 value={val} 
-                onChange={(nv) => onChange({...value, [key]: nv})} depth={depth + 1}/>
+                onChange={(nv) => onChange({...value, [key]: nv})}
+                depth={depth + 1}
+                useFlatObjectTable={useFlatObjectTable}
+                showCmsBlockControls={showCmsBlockControls}
+                allowAddField={allowAddField}
+                hiddenKeys={hiddenKeys}
+                />
               )}
             </div>
           </AccordionField>
         );
       })}
+      {allowAddField && (
+        <button
+          onClick={handleAddField}
+          className="w-full rounded-xl border-2 border-dashed border-slate-200 py-2 text-[10px] font-bold text-slate-400 transition-all hover:border-blue-300 hover:text-blue-500"
+        >
+          + ADD FIELD
+        </button>
+      )}
     </div>
   );
 };

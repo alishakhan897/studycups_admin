@@ -1,13 +1,14 @@
 import type { ApiService } from "../types";
 
-const BASE_URL = "https://studycupsbackend-wb8p.onrender.com/api";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.trim() || "https://studycupsbackend-wb8p.onrender.com/api";
 
 // This version handles ALL backend formats without breaking DataManagement
 export function createApi<T extends { id: any }>(endpoint: string) {
   return {
     // Always returns clean array (never object)
    getAll: async () => {
-  const res = await fetch(`${BASE_URL}/${endpoint}`);
+  const res = await fetch(`${API_BASE_URL}/${endpoint}`);
   const json = await res.json();
 
   return Array.isArray(json.data) ? json.data : [];
@@ -15,12 +16,12 @@ export function createApi<T extends { id: any }>(endpoint: string) {
 
     // Dashboard needs raw object: {total,data}
     getRaw: async () => {
-      const res = await fetch(`${BASE_URL}/${endpoint}`);
+      const res = await fetch(`${API_BASE_URL}/${endpoint}`);
       return res.json();
     },
 
     add: async (item) => {
-      const res = await fetch(`${BASE_URL}/${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item),
@@ -29,7 +30,7 @@ export function createApi<T extends { id: any }>(endpoint: string) {
     },
 
     update: async (id, item) => {
-      const res = await fetch(`${BASE_URL}/${endpoint}/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item),
@@ -38,7 +39,7 @@ export function createApi<T extends { id: any }>(endpoint: string) {
     },
 
     delete: async (id) => {
-      await fetch(`${BASE_URL}/${endpoint}/${id}`, {
+      await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
         method: "DELETE",
       });
     }
@@ -47,7 +48,7 @@ export function createApi<T extends { id: any }>(endpoint: string) {
 
 export const dashboardApi = {
   getStats: async () => {
-    const res = await fetch(`${BASE_URL}/dashboard/stats`);
+    const res = await fetch(`${API_BASE_URL}/dashboard/stats`);
     if (!res.ok) {
       throw new Error("Failed to load dashboard stats");
     }

@@ -9,6 +9,7 @@ import { DataManagement } from './components/DataManagement';
 import CollegeScraperDashboard from "./components/ScrapedColleges";
 import { Settings } from './components/Settings';
 import CollegeEditPage from './components/CollegeEditPage';
+import CourseEditPage from './components/CourseEditPage';
 import { collegeApi, courseApi, examApi, blogApi, enquiryApi, eventApi } from './services/apiService';
 import { collegeColumns, courseColumns, examColumns, blogColumns, enquiryColumns, eventColumns, collegeFormFields, courseFormFields, examFormFields, blogFormFields, enquiryFormFields, eventFormFields } from './constants';
 import type { Page } from './types';
@@ -21,6 +22,7 @@ import ExistingBlogEditor from "./components/ExistingBlogEditor";
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [editingCollegeId, setEditingCollegeId] = useState<number | null>(null);
+  const [editingCourseSlug, setEditingCourseSlug] = useState<string | null>(null);
   const [editingExamId, setEditingExamId] = useState<number | null>(null);
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
 
@@ -71,12 +73,18 @@ const App: React.FC = () => {
         );
 
       case 'courses':
-        return (
+        return editingCourseSlug === null ? (
           <DataManagement
             title="Courses"
             api={courseApi}
             columns={courseColumns}
             formFields={courseFormFields}
+            onEditCourse={(slug) => setEditingCourseSlug(slug)}
+          />
+        ) : (
+          <CourseEditPage
+            courseSlug={editingCourseSlug}
+            onBack={() => setEditingCourseSlug(null)}
           />
         );
 
@@ -163,7 +171,7 @@ case "editBlog":
       <div className="flex h-screen bg-gray-100 font-sans">
         <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title={pageTitles[currentPage]} />
+          <Header title={currentPage === 'courses' && editingCourseSlug ? 'Edit Course' : pageTitles[currentPage]} />
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-6 lg:p-8">
             {renderContent()}
           </main>

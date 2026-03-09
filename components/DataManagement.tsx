@@ -6,19 +6,21 @@ import { BulkUploadModal } from './BulkUploadModal';
 import { ImportFromUrlModal } from './ImportFromUrlModal';
 import { Plus, Edit, Trash2, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Download, UploadCloud, Link as LinkIcon } from 'lucide-react';
 import AddBlog from "./AddBlog";
+import { API_BASE_URL } from '../services/apiService';
 interface DataManagementProps<T extends DataItem> {
   title: string;
   api: ApiService<T>;
   columns: Column<T>[];
   formFields: FormField[];
   onEditCollege?: (id: number) => void;
+  onEditCourse?: (slug: string) => void;
   onEditExam?: (id: number) => void;
   onAddBlog?: () => void;  // ✅ ADD THIS
   onEditBlog?: (id: string) => void;
 }
 
 
-function DataManagementImpl<T extends DataItem>({ title, api, columns, formFields, onEditCollege, onEditExam, onAddBlog ,   onEditBlog }: DataManagementProps<T>): React.ReactElement {
+function DataManagementImpl<T extends DataItem>({ title, api, columns, formFields, onEditCollege, onEditCourse, onEditExam, onAddBlog ,   onEditBlog }: DataManagementProps<T>): React.ReactElement {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,16 +48,19 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
     try {
       // Custom logic for Courses extraction 
       if (title === "Colleges") {
-        const res = await fetch("https://studycupsbackend-wb8p.onrender.com/api/colleges/list");
+        const res = await fetch(`${API_BASE_URL}/colleges/list`);
         const json = await res.json();
         setData(json.data);
         return;
       }
       if (title === "Courses") {
-        const res = await fetch("https://studycupsbackend-wb8p.onrender.com/api/courses/all");
+        const res = await fetch(`${API_BASE_URL}/main-course-card`);
         const json = await res.json();
 
-        setData(json.data || []);
+        setData((json.data || []).map((item: any) => ({
+          ...item,
+          id: item.slug,
+        })));
         return;
       }
 
@@ -265,6 +270,9 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
   });
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const showActionsColumn = title !== "Courses" || !!onEditCourse;
+  const showDeleteAction = title !== "Courses";
+  const showEditAction = title === "Courses" ? !!onEditCourse : formFields.length > 0;
 
   if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   if (error) return (
@@ -322,16 +330,18 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
                 <th key={col.header} className="px-6 py-3">{col.header}</th>
               ))}
 
-              {/* Show Actions except on Courses */}
-              {title !== "Courses" && (
+              {showActionsColumn && (
                 <th className="px-6 py-3 text-right">Actions</th>
               )}
             </tr>
           </thead>
 
           <tbody>
-            {paginatedData.map(item => (
-              <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
+            {paginatedData.map((item, index) => {
+              const rowId = String((item as any).id ?? (item as any).slug ?? `${title}-${index}`);
+
+              return (
+              <tr key={rowId} className="bg-white border-b hover:bg-gray-50">
                 {columns.map(col => (
                   <td key={col.header} className={`px-6 py-4 ${col.className || ''}`}>
                     {typeof col.accessor === 'function'
@@ -340,13 +350,16 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
 
                   </td>
                 ))}
+                {showActionsColumn && (
                 <td className="px-6 py-4 text-right flex justify-end items-center space-x-4">
 
-                  {title !== "Courses" && formFields.length > 0 && (
+                  {showEditAction && (
                     <button
                       onClick={() => {
                         if (title === "Colleges" && onEditCollege) {
                           onEditCollege(item.id);
+                        } else if (title === "Courses" && onEditCourse) {
+                          onEditCourse(String((item as any).slug ?? rowId));
 
                         } else if (title === "Exams" && onEditExam) {
                           onEditExam(item.id);
@@ -365,16 +378,17 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
 
                   )}
 
-                  {title !== "Courses" && (
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">
+                  {showDeleteAction && (
+                    <button onClick={() => handleDelete(rowId)} className="text-red-600 hover:text-red-800">
                       <Trash2 size={18} />
                     </button>
                   )}
 
                 </td>
+                )}
 
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
         {paginatedData.length === 0 && <div className="text-center py-8 text-gray-500">No data found.</div>}
