@@ -3,6 +3,9 @@ import type { ApiService } from "../types";
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.trim() || "https://studycupsbackend-wb8p.onrender.com/api";
 
+export const MANUAL_COLLEGE_API_URL =
+  import.meta.env.VITE_MANUAL_COLLEGE_API_URL?.trim() || "https://studycupsbackend-wb8p.onrender.com/api/colleges/manual";
+
 // This version handles ALL backend formats without breaking DataManagement
 export function createApi<T extends { id: any }>(endpoint: string) {
   return {

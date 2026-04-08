@@ -357,12 +357,12 @@ function DataManagementImpl<T extends DataItem>({ title, api, columns, formField
                     <button
                       onClick={() => {
                         if (title === "Colleges" && onEditCollege) {
-                          onEditCollege(item.id);
+                          onEditCollege(Number(item.id));
                         } else if (title === "Courses" && onEditCourse) {
                           onEditCourse(String((item as any).slug ?? rowId));
 
                         } else if (title === "Exams" && onEditExam) {
-                          onEditExam(item.id);
+                          onEditExam(Number(item.id));
                         } 
                           else if (title === "Blogs" && onEditBlog) {
       onEditBlog(item.id);   // ✅ ONLY ID

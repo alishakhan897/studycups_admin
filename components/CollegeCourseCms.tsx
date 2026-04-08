@@ -1,4 +1,3 @@
-import React from "react";
 import { ExternalLink, Loader2 } from "lucide-react";
 import SmartRenderer from "./SmartRenderer";
 
@@ -11,7 +10,12 @@ interface CollegeCourseCmsProps {
   saving: boolean;
 }
 
-const StatCard: React.FC<{ label: string; value: any }> = ({ label, value }) => {
+interface StatCardProps {
+  label: string;
+  value: any;
+}
+
+const StatCard = ({ label, value }: StatCardProps) => {
   if (value === null || value === undefined || value === "") {
     return null;
   }
@@ -28,15 +32,32 @@ const StatCard: React.FC<{ label: string; value: any }> = ({ label, value }) => 
   );
 };
 
-const CollegeCourseCms: React.FC<CollegeCourseCmsProps> = ({
+const CollegeCourseCms = ({
   data,
   loading,
   error,
   onChange,
   onSave,
   saving,
-}) => {
-  const courseCount = Array.isArray(data?.courses) ? data.courses.length : 0;
+}: CollegeCourseCmsProps) => {
+  const sourceUrl = data?.source_url || data?.sourceUrl || data?.url || "";
+  const finalUrl = data?.final_url || data?.finalUrl || "";
+  const courseCount = Array.isArray(data?.courses)
+    ? data.courses.length
+    : Array.isArray(data?.info_course_fee)
+      ? data.info_course_fee.length
+      : 0;
+  const hiddenKeys = [
+    "_id",
+    "id",
+    "__v",
+    "heroDownloaded",
+    "url",
+    "source_url",
+    "sourceUrl",
+    "final_url",
+    "finalUrl",
+  ];
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -54,15 +75,27 @@ const CollegeCourseCms: React.FC<CollegeCourseCmsProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {data?.url && (
+          {sourceUrl && (
             <a
-              href={data.url}
+              href={sourceUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-slate-50"
             >
               <ExternalLink size={16} />
               Source URL
+            </a>
+          )}
+
+          {finalUrl && finalUrl !== sourceUrl && (
+            <a
+              href={finalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-slate-50"
+            >
+              <ExternalLink size={16} />
+              Final URL
             </a>
           )}
 
@@ -114,7 +147,7 @@ const CollegeCourseCms: React.FC<CollegeCourseCmsProps> = ({
               useFlatObjectTable={false}
               showCmsBlockControls={false}
               allowAddField={true}
-              hiddenKeys={["_id", "id", "__v", "heroDownloaded"]}
+              hiddenKeys={hiddenKeys}
             />
           </div>
         </div>

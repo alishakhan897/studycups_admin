@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import BlogEditor from "./BlogEditor";
 
 type Props = {
-  blogId: number;
+  blogId: string | number;
   onBack: () => void;
 };
 

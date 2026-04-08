@@ -9,6 +9,7 @@ import { DataManagement } from './components/DataManagement';
 import CollegeScraperDashboard from "./components/ScrapedColleges";
 import { Settings } from './components/Settings';
 import CollegeEditPage from './components/CollegeEditPage';
+import AddCollege from './components/AddCollege';
 import CourseEditPage from './components/CourseEditPage';
 import { collegeApi, courseApi, examApi, blogApi, enquiryApi, eventApi } from './services/apiService';
 import { collegeColumns, courseColumns, examColumns, blogColumns, enquiryColumns, eventColumns, collegeFormFields, courseFormFields, examFormFields, blogFormFields, enquiryFormFields, eventFormFields } from './constants';
@@ -42,7 +43,7 @@ const App: React.FC = () => {
               <button
                 onClick={() => {
                   setEditingCollegeId(null);
-                  setCurrentPage("editCollege");
+                  setCurrentPage("addCollege");
                 }}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
@@ -69,6 +70,14 @@ const App: React.FC = () => {
         return (
           <CollegeScraperDashboard
             onBack={() => setCurrentPage("colleges")} // optional
+          />
+        );
+
+      case 'addCollege':
+        return (
+          <AddCollege
+            onBack={() => setCurrentPage("colleges")}
+            onSaved={() => setCurrentPage("colleges")}
           />
         );
 
@@ -161,6 +170,7 @@ case "editBlog":
     events: 'Event Management',
     settings: 'Settings',
     editCollege: 'College Scraper Dashboard',
+    addCollege: 'Add New College',
     editExam: 'Edit Exam',
     addBlog: 'Add New Blog',
     editBlog: 'Edit Blog',
